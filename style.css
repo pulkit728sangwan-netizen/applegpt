@@ -1,88 +1,103 @@
-/* ---------- Basic layout ---------- */
 :root{
-  --sky:#cfefff;
+  --sky-top:#e9fbff;
+  --sky-bottom:#bfe9ff;
   --ground:#7a4b2a;
   --trunk:#6b3f23;
-  --leaf:#2fa84b;
+  --leaf:#37a84a;
+  --leaf-dark:#2f8a3f;
   --apple:#d73d34;
   --seed-brown:#8b5a3c;
 }
+
+/* page */
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(to top,#cfefff,#e6f7ff);display:flex;justify-content:center;align-items:flex-end;overflow:hidden}
+html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial}
+body{
+  display:flex;justify-content:center;align-items:flex-end;
+  background: linear-gradient(to top,var(--sky-bottom),var(--sky-top));
+  overflow:hidden;
+}
 
-/* Scene and stage sizes (big & well-defined) */
-.scene{width:760px;height:720px;position:relative;pointer-events:none}
-.sky{position:absolute;inset:0;background:transparent}
-.stage{position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:760px;height:620px;display:block}
+/* stage */
+.scene{width:980px;max-width:98vw;height:820px;position:relative;pointer-events:none}
+.stage{position:relative;width:100%;height:100%;margin:0 auto}
 
-/* Ground */
-.ground{position:absolute;left:0;right:0;bottom:0;height:140px;background:linear-gradient(180deg,#8b5b3b,var(--ground));border-top-left-radius:18px;border-top-right-radius:18px;box-shadow:inset 0 6px 12px rgba(0,0,0,0.12);z-index:1}
+/* ground */
+.ground{position:absolute;left:0;right:0;bottom:0;height:160px;background:linear-gradient(180deg,#8b5b3b,var(--ground));border-top-left-radius:22px;border-top-right-radius:22px;box-shadow:inset 0 8px 20px rgba(0,0,0,0.15);z-index:1}
 
-/* Plot (center area above ground) */
-.plot{position:absolute;width:380px;height:420px;left:50%;transform:translateX(-50%);bottom:140px;z-index:5}
+/* info */
+.info{position:absolute;left:12px;top:12px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;font-size:13px;color:#123;box-shadow:0 6px 18px rgba(0,0,0,0.06);z-index:60}
 
-/* ---------- SEED (two halves) ---------- */
-.seed{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);width:38px;height:24px;z-index:20;pointer-events:none}
-.seed .half{position:absolute;width:19px;height:24px;background:linear-gradient(180deg,var(--seed-brown),#6b3f23);border-radius:6px;box-shadow:0 3px 6px rgba(0,0,0,0.25)}
+/* central planting area */
+.seed, .sprout, .crown, .impact, .ground-seed { position:absolute; left:50%; transform:translateX(-50%); }
+
+/* SEED */
+.seed{bottom:92px;width:42px;height:26px;z-index:40}
+.seed .half{position:absolute;width:21px;height:26px;background:linear-gradient(180deg,var(--seed-brown),#6b3f23);border-radius:6px;box-shadow:0 4px 8px rgba(0,0,0,0.25)}
 .seed .left{left:0;transform-origin:right center}
 .seed .right{right:0;transform-origin:left center}
+.seed.open .left{animation:seedOpenLeft 700ms forwards ease-out}
+.seed.open .right{animation:seedOpenRight 700ms forwards ease-out}
+@keyframes seedOpenLeft{0%{transform:rotate(0)}100%{transform:rotate(-48deg) translate(-8px,-6px)}}
+@keyframes seedOpenRight{0%{transform:rotate(0)}100%{transform:rotate(48deg) translate(8px,-6px)}}
 
-/* seed open animations triggered by .open class */
-.seed.open .left{animation:seed-open-left 700ms forwards ease-out}
-.seed.open .right{animation:seed-open-right 700ms forwards ease-out}
-@keyframes seed-open-left{0%{transform:rotate(0) translateX(0)}100%{transform:rotate(-45deg) translateX(-8px) translateY(-6px)}}
-@keyframes seed-open-right{0%{transform:rotate(0) translateX(0)}100%{transform:rotate(45deg) translateX(8px) translateY(-6px)}}
+/* SPROUT & STEM */
+.sprout{bottom:96px;width:18px;height:0;z-index:30}
+.stem{width:18px;height:320px;background:linear-gradient(180deg,#8f6040,var(--trunk));border-radius:10px;transform-origin:bottom center;transform:scaleY(0);box-shadow:0 6px 12px rgba(0,0,0,0.12)}
+.stem.grow{animation:stemGrow 1400ms forwards cubic-bezier(.2,.9,.2,1)}
+@keyframes stemGrow{0%{transform:scaleY(0)}85%{transform:scaleY(1.06)}100%{transform:scaleY(1)}}
 
-/* ---------- SPROUT & STEM ---------- */
-.sprout{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);width:14px;height:0;z-index:10}
-.stem{position:absolute;left:50%;transform:translateX(-50%) scaleY(0);width:14px;height:260px;background:linear-gradient(180deg,#8a5b38,var(--trunk));border-radius:8px;transform-origin:bottom center;box-shadow:0 2px 8px rgba(0,0,0,0.12);}
+/* CROWN and BRANCHES */
+.crown{bottom:260px;width:520px;height:260px;z-index:28;pointer-events:none}
+.branch{position:absolute;bottom:36px;height:18px;border-radius:12px;background:linear-gradient(90deg,#8f6040,#6b3f23);box-shadow:0 4px 10px rgba(0,0,0,0.12);opacity:0;transform-origin:left center}
+.branch.arm.left{left:120px;width:220px;transform:rotate(-28deg) translateX(-24px) scaleX(0)}
+.branch.arm.right{right:120px;width:220px;transform:rotate(28deg) translateX(24px) scaleX(0);transform-origin:right center}
+.branch.extend-left{animation:armLeftExtend 700ms forwards cubic-bezier(.2,.9,.2,1);opacity:1}
+.branch.extend-right{animation:armRightExtend 700ms forwards cubic-bezier(.2,.9,.2,1);opacity:1}
+@keyframes armLeftExtend{0%{transform:rotate(-28deg) translateX(-24px) scaleX(0);opacity:0}100%{transform:rotate(-18deg) translateX(0) scaleX(1);opacity:1}}
+@keyframes armRightExtend{0%{transform:rotate(28deg) translateX(24px) scaleX(0);opacity:0}100%{transform:rotate(18deg) translateX(0) scaleX(1);opacity:1}}
 
-/* stem grow class */
-.stem.grow{animation:stem-grow 1200ms forwards cubic-bezier(.2,.9,.3,1)}
-@keyframes stem-grow{0%{transform:translateX(-50%) scaleY(0)}90%{transform:translateX(-50%) scaleY(1.05)}100%{transform:translateX(-50%) scaleY(1)}}
+/* LEAVES (oval style) - many leaves will be created by JS and get class leaf */
+.leaf {
+  position:absolute;
+  width:56px;height:34px;
+  background: radial-gradient(circle at 40% 30%, var(--leaf), var(--leaf-dark) 70%);
+  border-radius:40px 20px 40px 20px;
+  transform-origin:center center;
+  opacity:0;
+  transform: scale(0.12) rotate(-6deg);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+  z-index:29;
+}
+/* leaf pop */
+.leaf.pop{animation:leafPop 620ms forwards cubic-bezier(.2,.9,.2,1)}
+@keyframes leafPop{0%{transform:scale(0.12) rotate(-8deg);opacity:0}60%{transform:scale(1.06) rotate(2deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}
 
-/* ---------- BRANCH (arms + leaves + bud + apple) ---------- */
-.branch{position:absolute;left:50%;bottom:210px;transform:translateX(-50%);width:260px;height:140px;pointer-events:none;z-index:14}
-.arm{position:absolute;bottom:18px;width:130px;height:14px;border-radius:8px;background:linear-gradient(90deg,#8a5b38,var(--trunk));box-shadow:0 2px 8px rgba(0,0,0,0.1);opacity:0;transform-origin:left center}
-.arm.left{left:8px;transform:rotate(-30deg) translateX(-20px) scaleX(0)}
-.arm.right{right:8px;transform:rotate(30deg) translateX(20px) scaleX(0);transform-origin:right center}
-.arm.extend-left{animation:arm-left-extend 700ms forwards cubic-bezier(.2,.9,.3,1);opacity:1}
-.arm.extend-right{animation:arm-right-extend 700ms forwards cubic-bezier(.2,.9,.3,1);opacity:1}
-@keyframes arm-left-extend{0%{transform:rotate(-30deg) translateX(-20px) scaleX(0);opacity:0}100%{transform:rotate(-20deg) translateX(0) scaleX(1);opacity:1}}
-@keyframes arm-right-extend{0%{transform:rotate(30deg) translateX(20px) scaleX(0);opacity:0}100%{transform:rotate(20deg) translateX(0) scaleX(1);opacity:1}}
+/* BUD and APPLE */
+.bud{position:absolute;width:12px;height:8px;background:#ffdede;border-radius:8px;left:50%;transform:translateX(-50%) scale(0);bottom:110px;z-index:31}
+.bud.pop{animation:budPop 700ms forwards ease-out}
+@keyframes budPop{0%{transform:translateX(-50%) scale(0);opacity:0}100%{transform:translateX(-50%) scale(1);opacity:1}}
 
-/* ---------- LEAVES (vector shapes) ---------- */
-.leaf{position:absolute;width:46px;height:32px;background:var(--leaf);border-radius:40px 20px 40px 20px;box-shadow:0 3px 8px rgba(0,0,0,0.12);opacity:0;transform:scale(0.18);transform-origin:center center}
-.l1{left:36px;bottom:56px}
-.l2{left:78px;bottom:36px}
-.l3{right:36px;bottom:56px}
-.l4{right:78px;bottom:36px}
-.l5{left:120px;top:12px;width:56px;height:36px;border-radius:50%}
-.leaf.grow{animation:leaf-grow 600ms forwards cubic-bezier(.2,.9,.3,1)}
-@keyframes leaf-grow{0%{transform:scale(0.18);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}}
+.apple{position:absolute;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 34% 28%, #ff9494, var(--apple) 60%);left:50%;transform:translateX(-50%) scale(0);bottom:94px;z-index:33;box-shadow:0 12px 18px rgba(0,0,0,0.18)}
+.apple.grow{animation:appleGrow 700ms forwards cubic-bezier(.2,.9,.2,1);opacity:1}
+@keyframes appleGrow{0%{transform:translateX(-50%) scale(0.02);opacity:0}80%{transform:translateX(-50%) scale(1.08);opacity:1}100%{transform:translateX(-50%) scale(1);opacity:1}}
 
-/* ---------- BUD & APPLE ---------- */
-.bud{position:absolute;width:12px;height:8px;background:#ffd6d6;border-radius:8px;left:50%;transform:translateX(-50%) scale(0);bottom:66px;box-shadow:0 2px 6px rgba(0,0,0,0.12);z-index:18}
-.bud.grow{animation:bud-grow 700ms forwards cubic-bezier(.2,.9,.3,1)}
-@keyframes bud-grow{0%{transform:translateX(-50%) scale(0);opacity:0}100%{transform:translateX(-50%) scale(1);opacity:1}}
+/* apple fall—JS toggles .fall */
+.apple.fall{animation:appleFall 1200ms forwards cubic-bezier(.22,.7,.25,1)}
+@keyframes appleFall{0%{transform:translateX(-50%) translateY(0) scale(1);}60%{transform:translateX(-50%) translateY(190px) scale(1);}78%{transform:translateX(-50%) translateY(160px) scale(0.92);}100%{transform:translateX(-50%) translateY(190px) scale(0.0);opacity:0;}}
 
-.apple{position:absolute;width:36px;height:36px;background:var(--apple);border-radius:50%;left:50%;transform:translateX(-50%) scale(0);bottom:44px;box-shadow:0 6px 12px rgba(0,0,0,0.18);z-index:19;display:flex;align-items:center;justify-content:center}
-.apple::after{content:'';position:absolute;left:62%;top:-8px;width:14px;height:8px;background:var(--leaf);border-radius:6px;transform:rotate(-30deg) translateX(-6px)}
-.apple.grow{animation:apple-grow 700ms forwards cubic-bezier(.2,.9,.3,1);opacity:1}
-@keyframes apple-grow{0%{transform:translateX(-50%) scale(0.05);opacity:0}80%{transform:translateX(-50%) scale(1.08);opacity:1}100%{transform:translateX(-50%) scale(1);opacity:1}}
+/* IMPACT shadow */
+.impact{position:absolute;bottom:116px;width:120px;height:26px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,0.28),rgba(0,0,0,0.05));opacity:0;z-index:10;transform:translateX(-50%) scale(0.6)}
+.impact.pop{animation:impactPop 520ms forwards ease}
+@keyframes impactPop{0%{opacity:0;transform:translateX(-50%) scale(0.5)}60%{opacity:0.86;transform:translateX(-50%) scale(1.05)}100%{opacity:0.6;transform:translateX(-50%) scale(0.95)}}
 
-/* apple falling animation (JS will add .fall) */
-.apple.fall{animation:apple-fall 1200ms forwards cubic-bezier(.2,.8,.2,1)}
-@keyframes apple-fall{0%{transform:translateX(-50%) translateY(0) scale(1)}60%{transform:translateX(-50%) translateY(170px) scale(1)}80%{transform:translateX(-50%) translateY(150px) scale(0.92)}100%{transform:translateX(-50%) translateY(170px) scale(0.0);opacity:0}}
-
-/* ---------- GROUND-SEED (tiny seed after apple falls) ---------- */
-.ground-seed{position:absolute;left:50%;transform:translateX(-50%);bottom:34px;z-index:17}
-.ground-seed .tiny{display:block;width:14px;height:10px;background:linear-gradient(180deg,var(--seed-brown),#6b3f23);border-radius:6px;transform:scale(0);opacity:0;margin-left:-7px}
-.ground-seed.show .tiny{animation:tiny-seed-pop 420ms forwards ease-out}
-@keyframes tiny-seed-pop{0%{transform:scale(0);opacity:0}70%{transform:scale(1.18);opacity:1}100%{transform:scale(1);opacity:1}}
-
-/* small info box */
-.info{position:absolute;left:12px;top:12px;background:rgba(255,255,255,0.88);padding:8px 12px;border-radius:8px;font-size:13px;color:#123;box-shadow:0 4px 12px rgba(0,0,0,0.06);z-index:40;pointer-events:none}
+/* tiny ground seed after apple falls */
+.ground-seed{position:absolute;bottom:98px;z-index:35;left:50%;transform:translateX(-50%)}
+.ground-seed .tiny{display:block;width:16px;height:12px;background:linear-gradient(180deg,var(--seed-brown),#6b3f23);border-radius:8px;transform:scale(0);opacity:0;margin-left:-8px}
+.ground-seed.show .tiny{animation:tinyPop 420ms forwards ease-out}
+@keyframes tinyPop{0%{transform:scale(0);opacity:0}70%{transform:scale(1.18);opacity:1}100%{transform:scale(1);opacity:1}}
 
 /* responsive */
-@media (max-width:720px){.scene{transform:scale(0.82)}}
+@media (max-width:900px){ .scene{transform:scale(0.85)} }
+@media (max-width:620px){ .scene{transform:scale(0.72)} }
+
