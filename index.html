@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Seed → Sprout → Tree → Apple → Seed (2 cycles)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="scene" aria-label="Tree growth animation">
+    <div class="sky"></div>
+
+    <!-- Stage -->
+    <div class="stage">
+      <!-- Plot: where seed sprouts and tree grows -->
+      <div class="plot" id="plot">
+        <!-- Reusable seed displayed on ground / after apple becomes seed -->
+        <div class="seed" id="seed" aria-hidden="false">
+          <div class="half left"></div>
+          <div class="half right"></div>
+        </div>
+
+        <!-- Sprout + stem (stem grows vertically) -->
+        <div class="sprout" id="sprout">
+          <div class="stem" id="stem"></div>
+        </div>
+
+        <!-- Branch area: arms, leaves, bud, apple -->
+        <div class="branch" id="branch">
+          <div class="arm left" id="armLeft"></div>
+          <div class="arm right" id="armRight"></div>
+
+          <div class="leaf l1" id="leaf1"></div>
+          <div class="leaf l2" id="leaf2"></div>
+          <div class="leaf l3" id="leaf3"></div>
+          <div class="leaf l4" id="leaf4"></div>
+          <div class="leaf l5" id="leaf5"></div>
+
+          <div class="bud" id="bud"></div>
+          <div class="apple" id="apple" aria-hidden="true"></div>
+        </div>
+
+        <!-- tiny seed that appears on ground after apple falls -->
+        <div class="ground-seed" id="groundSeed">
+          <span class="tiny"></span>
+        </div>
+      </div>
+
+      <!-- stylized ground -->
+      <div class="ground"></div>
+    </div>
+
+    <div class="info">Animation: seed → sprout → stem → leaves → apple → fall → seed (2 cycles)</div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
