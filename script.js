@@ -1,211 +1,334 @@
-// script.js
-// New: realistic vector-style growth with many leaves placed in a crown.
-// The script creates leaves and sequences animations; runs exactly 2 cycles.
+/// script.js
+// SVG-based sprout-to-tree growth animation, runs exactly 2 cycles.
 
-(function(){
-  // elements
-  const seed = document.getElementById('seed');
+(() => {
+  const seedLeft = document.getElementById('seedLeft');
+  const seedRight = document.getElementById('seedRight');
+  const seedGroup = document.getElementById('seedGroup');
+  const sproutPath = document.getElementById('sproutPath');
   const stem = document.getElementById('stem');
   const crown = document.getElementById('crown');
-  const leftBranch = document.getElementById('leftBranch');
-  const rightBranch = document.getElementById('rightBranch');
+  const leavesGroup = document.getElementById('leavesGroup');
   const bud = document.getElementById('bud');
-  const apple = document.getElementById('apple');
-  const impact = document.getElementById('impact');
-  const groundSeed = document.getElementById('groundSeed');
+  const appleGroup = document.getElementById('appleGroup');
+  const appleBody = document.getElementById('appleBody');
+  const impactShadow = document.getElementById('impactShadow');
 
-  let cycle = 0;
+  let cycles = 0;
   const MAX_CYCLES = 2;
-  const leafCount = 24; // number of leaves to create
 
-  // helper
-  const wait = ms => new Promise(res => setTimeout(res, ms));
-  const rand = (a,b) => a + Math.random()*(b-a);
+  // Timing plan (ms)
+  const TIMES = {
+    seedOpenDelay: 250,
+    seedOpenDuration: 700,
+    sproutDelay: 300,
+    sproutDrawDuration: 900,
+    stemGrowDuration: 1200,
+    branchDelay: 350,
+    crownShowDuration: 700,
+    leafStartDelay: 350,
+    perLeafDelay: 110,
+    budDelay: 400,
+    budToApple: 700,
+    appleHold: 1500,
+    appleFallDuration: 1100,
+    impactDuration: 520,
+    finalPause: 800
+  };
 
-  // create leaves and position them in crown region (arc-like crown)
-  const leaves = [];
-  function createLeaves(){
-    // clear existing
-    crown.querySelectorAll('.leaf').forEach(n=>n.remove());
-    const crownRect = crown.getBoundingClientRect();
-    const w = crownRect.width || 520;
-    const h = crownRect.height || 260;
-    // arrange leaves in an arch above stem: angle between -110 deg to -70 deg on left, and -110 to -70 on right mirrored
-    for (let i=0;i<leafCount;i++){
-      const el = document.createElement('div');
-      el.className = 'leaf';
-      // compute placement using polar-ish distribution across crown width
-      // we want denser near center
-      const t = i / (leafCount-1); // 0..1
-      // map to x across crown width with center bias
-      const bias = (Math.sin((t-0.5)*Math.PI) + 1) / 2; // 0..1 smooth
-      // alternate side left/right
-      const side = (i%2===0) ? -1 : 1;
-      // horizontal offset from center
-      const offsetX = (side * (40 + bias*180)) + rand(-14,14);
-      // vertical offset (higher when offsetX small)
-      const offsetY = 40 + (1 - Math.abs(offsetX)/(w/2))*(h*0.55) + rand(-12,12);
-      el.style.left = (260 + offsetX) + 'px';   // crown center ~260
-      el.style.bottom = offsetY + 'px';
-      // small rotation variance
-      const rot = rand(-20,20);
-      el.style.transform = `scale(0.12) rotate(${rot}deg)`;
-      // slightly vary size
-      const scale = rand(0.88,1.12);
-      el.style.width = Math.round(56*scale) + 'px';
-      el.style.height = Math.round(34*scale) + 'px';
-      crown.appendChild(el);
-      leaves.push(el);
+  // Utility sleep
+  const wait = (ms) => new Promise(res => setTimeout(res, ms));
+
+  // Create a natural crown of oval leaves programmatically
+  // Leaves will be positioned in an arc around crown center (0,-50)
+  function createLeaves(count = 22) {
+    leavesGroup.innerHTML = '';
+    const centerX = 0;
+    const centerY = -40;
+    const radiusX = 180;
+    const radiusY = 80;
+
+    for (let i = 0; i < count; i++) {
+      // angle from -120deg to -60deg mirrored left/right
+      const side = (i % 2 === 0) ? -1 : 1;
+      // progress 0..1 from center outward
+      const p = (i / (count - 1));
+      // bias so more leaves near center
+      const bias = Math.sin(p * Math.PI);
+      // angle small spread
+      const angle = (side === -1)
+        ? (-95 - 30 * bias + Math.random() * 10)
+        : (-85 + 30 * bias + Math.random() * 10);
+
+      const rad = angle * Math.PI / 180;
+      const rx = radiusX * (0.55 + 0.45 * Math.random()) * (0.4 + bias * 0.9);
+      const ry = radiusY * (0.6 + 0.4 * Math.random()) * (0.6 + bias * 0.4);
+
+      // leaf center
+      const lx = centerX + rx * Math.cos(rad) + (Math.random() * 18 - 9);
+      const ly = centerY + ry * Math.sin(rad) + (Math.random() * 12 - 6);
+
+      const leaf = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+      leaf.setAttribute('cx', lx.toFixed(2));
+      leaf.setAttribute('cy', ly.toFixed(2));
+      const w = (46 + Math.random() * 30).toFixed(1);
+      const h = (28 + Math.random() * 18).toFixed(1);
+      leaf.setAttribute('rx', w / 2);
+      leaf.setAttribute('ry', h / 2);
+      leaf.setAttribute('fill', `url(#leafGrad${i})`); // gradient fallback not required
+      leaf.setAttribute('class', 'leaf');
+      // custom rotation variable for CSS animation
+      const rot = (Math.random() * 40 - 20).toFixed(1) + 'deg';
+      leaf.style.setProperty('--rot', rot);
+      leaf.style.opacity = 0;
+      // add slight transform (initial small scale handled by CSS)
+      leaf.setAttribute('transform', `rotate(${(Math.random()*20-10).toFixed(1)}, ${lx.toFixed(1)}, ${ly.toFixed(1)})`);
+      leavesGroup.appendChild(leaf);
     }
   }
 
-  // clear animations and prepare initial state
-  function resetAll(){
-    // reset seed closed
-    seed.classList.remove('open');
-    seed.style.visibility = 'visible';
-    seed.style.opacity = 1;
+  // Draw sprout path by animating stroke-dashoffset
+  function prepareSproutDraw() {
+    const length = sproutPath.getTotalLength();
+    sproutPath.style.strokeDasharray = `${length} ${length}`;
+    sproutPath.style.strokeDashoffset = `${length}`;
+    sproutPath.getBoundingClientRect(); // force reflow
+    return length;
+  }
 
-    // stem
-    stem.classList.remove('grow');
+  // Animate seed opening (two halves rotate outwards)
+  async function openSeed() {
+    // Move seed halves outwards visually using transform attributes on the group
+    // We'll use CSS classes by setting transforms on elements in JS for precise pivots
+    // Left half rotate CCW and translate
+    seedLeft.style.transformOrigin = 'center';
+    seedRight.style.transformOrigin = 'center';
 
-    // branches
-    leftBranch.classList.remove('extend-left');
-    rightBranch.classList.remove('extend-right');
+    // Use small animated transforms
+    seedLeft.animate([
+      { transform: 'translate(0px,0px) rotate(0deg)' },
+      { transform: 'translate(-18px,-12px) rotate(-48deg)' }
+    ], { duration: TIMES.seedOpenDuration, easing: 'cubic-bezier(.2,.9,.2,1)', fill: 'forwards' });
 
-    // bud/apple
-    bud.classList.remove('pop');
-    bud.style.visibility = 'visible';
+    seedRight.animate([
+      { transform: 'translate(0px,0px) rotate(0deg)' },
+      { transform: 'translate(18px,-12px) rotate(48deg)' }
+    ], { duration: TIMES.seedOpenDuration, easing: 'cubic-bezier(.2,.9,.2,1)', fill: 'forwards' });
+
+    await wait(TIMES.seedOpenDuration);
+  }
+
+  // Animate sprout path drawing and stem growth
+  async function drawSproutAndStem() {
+    const total = prepareSproutDraw();
+    // animate dashoffset to 0
+    const start = performance.now();
+    const dur = TIMES.sproutDrawDuration;
+    return new Promise(resolve => {
+      function tick(now) {
+        const t = Math.min(1, (now - start) / dur);
+        sproutPath.style.strokeDashoffset = `${Math.round(total * (1 - t))}`;
+        // stem height grows following t after small delay
+        const stemH = Math.round(t * 320); // final height 320
+        stem.setAttribute('height', stemH);
+        stem.setAttribute('y', -stemH); // grows upward from anchor
+        if (t < 1) requestAnimationFrame(tick);
+        else resolve();
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
+  // Reveal crown and extend branches
+  async function showCrownAndBranches() {
+    // fade in crown
+    crown.classList.add('crown-show');
+    // animate left/right branches width/scale using Web Animations
+    const left = document.getElementById('leftBranch').firstElementChild || document.querySelector('#leftBranch rect');
+    const right = document.getElementById('rightBranch').firstElementChild || document.querySelector('#rightBranch rect');
+
+    // Expand left branch using transform of group (it already has transform rotate set)
+    const leftGroup = document.getElementById('leftBranch');
+    const rightGroup = document.getElementById('rightBranch');
+
+    leftGroup.animate([
+      { transform: 'translate(-40px,40px) rotate(-28deg) scaleX(0)' },
+      { transform: 'translate(0px,40px) rotate(-18deg) scaleX(1)' }
+    ], { duration: 700, easing: 'cubic-bezier(.2,.9,.2,1)', fill: 'forwards' });
+
+    rightGroup.animate([
+      { transform: 'translate(40px,40px) rotate(28deg) scaleX(0)' },
+      { transform: 'translate(0px,40px) rotate(18deg) scaleX(1)' }
+    ], { duration: 700, easing: 'cubic-bezier(.2,.9,.2,1)', fill: 'forwards' });
+
+    await wait(700);
+  }
+
+  // Pop leaves one-by-one
+  async function popLeaves() {
+    const all = Array.from(leavesGroup.querySelectorAll('.leaf'));
+    // sort by distance to center (so center leaves appear first)
+    const centerX = 0;
+    all.sort((a, b) => {
+      const ax = parseFloat(a.getAttribute('cx'));
+      const bx = parseFloat(b.getAttribute('cx'));
+      return Math.abs(ax - centerX) - Math.abs(bx - centerX);
+    });
+
+    for (let i = 0; i < all.length; i++) {
+      const el = all[i];
+      // use CSS animation class: leaf-pop
+      el.classList.add('leaf-pop');
+      // small delay between leaves
+      await wait(TIMES.perLeafDelay + Math.random() * 80);
+    }
+  }
+
+  // Show bud then apple
+  async function growApple() {
     bud.style.opacity = 1;
-    apple.classList.remove('grow','fall');
-    apple.style.opacity = 0;
-    apple.setAttribute('aria-hidden','true');
-    apple.style.display = '';
-
-    // impact & ground seed
-    impact.classList.remove('pop');
-    groundSeed.classList.remove('show');
-
-    // leaves reset
-    leaves.forEach(l=>{
-      l.classList.remove('pop');
-      l.style.opacity = 0;
-      // reset transform scale small
-      // leave rotation/position as is
-      l.style.transform = l.style.transform.replace(/scale\([^\)]*\)/,'scale(0.12)');
-      // ensure reflow
-      void l.offsetWidth;
-    });
-  }
-
-  // single run sequence
-  async function runOnce(){
-    resetAll();
-    await wait(220);
-
-    // 1. seed opens
-    seed.classList.add('open');
-    await wait(900);
-
-    // 2. sprout -> stem grows
-    stem.classList.add('grow');
-    await wait(1300);
-
-    // 3. branches extend
-    leftBranch.classList.add('extend-left');
-    rightBranch.classList.add('extend-right');
-    await wait(700);
-
-    // 4. leaves pop one-by-one in a natural order: nearest to center first
-    // sort leaves by absolute x distance to center
-    const centerX = 260;
-    const ordered = [...leaves].sort((a,b)=>{
-      const ax = parseFloat(a.style.left), bx = parseFloat(b.style.left);
-      return Math.abs(ax-centerX) - Math.abs(bx-centerX);
-    });
-    for (let i=0;i<ordered.length;i++){
-      const l = ordered[i];
-      // small delay between pops
-      await wait(rand(80,150));
-      l.classList.add('pop');
-      // tiny rotation tweak to look natural
-      l.style.transform = l.style.transform.replace('scale(0.12)', 'scale(0.98)');
-    }
-
-    // 5. bud appears then becomes apple
-    await wait(500);
-    bud.classList.add('pop');
-    await wait(680);
-    bud.style.visibility = 'hidden';
+    bud.classList.add('bud-pop');
+    await wait(TIMES.budToApple);
+    // hide bud and show apple
     bud.style.opacity = 0;
-    apple.classList.add('grow');
-    apple.style.opacity = 1;
-    apple.setAttribute('aria-hidden','false');
-
-    // 6. Pause, then apple falls
-    await wait(1600);
-    // impact shadow appears slightly before
-    impact.classList.add('pop');
-    apple.classList.add('fall');
-    await wait(1250);
-
-    // 7. apple compressed into ground seed: hide apple and show tiny
-    apple.style.opacity = 0;
-    apple.setAttribute('aria-hidden','true');
-    groundSeed.classList.add('show');
-
-    // 8. re-show the reusable seed on ground (closed) soon after
-    await wait(300);
-    seed.classList.remove('open'); // ensure closed
-    seed.style.visibility = 'visible';
-    seed.style.opacity = 1;
-
+    appleGroup.style.opacity = 1;
+    appleGroup.classList.add('apple-grow');
     await wait(700);
   }
 
-  // run exactly MAX_CYCLES
-  async function runCycles(){
-    createLeaves();
-    resetAll();
-    await wait(300);
-    while (cycle < MAX_CYCLES){
-      await runOnce();
-      cycle++;
-      if (cycle < MAX_CYCLES){
-        // small gap between cycles: hide the tiny groundseed and clear apple/bud
-        groundSeed.classList.remove('show');
-        apple.classList.remove('grow','fall');
-        bud.classList.remove('pop');
-        apple.style.display = '';
+  // Apple fall with rotation and bounce, then morph to seed
+  async function appleFallAndMorph() {
+    // compute fall distance (from crown to ground)
+    const startY = -8; // appleGroup initial translate y
+    const groundY = 580 - 220; // approximate in scene coords (scene height 700, ground at 560)
+    const fallDistance = 340;
+
+    // animate impact shadow pop slightly before landing
+    impactShadow.classList.add('impact-pop');
+
+    // animate appleGroup using Web Animations API: translateY and rotate
+    const anim = appleGroup.animate([
+      { transform: 'translate(0px,-8px) rotate(0deg)', offset: 0 },
+      { transform: `translate(0px,${fallDistance * 0.6}px) rotate(30deg)`, offset: 0.6 },
+      { transform: `translate(0px,${fallDistance * 0.4}px) rotate(-12deg)`, offset: 0.8 },
+      { transform: `translate(0px,${fallDistance}px) rotate(8deg) scale(0.2)`, offset: 1 }
+    ], { duration: TIMES.appleFallDuration, easing: 'cubic-bezier(.22,.7,.25,1)', fill: 'forwards' });
+
+    await wait(TIMES.appleFallDuration);
+
+    // hide apple and show tiny ground seed pop
+    appleGroup.style.opacity = 0;
+    const groundSeed = document.getElementById('groundSeed');
+    groundSeed.classList.add('ground-seed-pop');
+
+    // small delay for sink
+    await wait(420);
+  }
+
+  // Reset dynamic elements for next cycle
+  function resetForNextCycle() {
+    // reset seed halves back to closed: we animate back via inverse transforms
+    seedLeft.style.transform = '';
+    seedRight.style.transform = '';
+
+    // reset sprout path
+    sproutPath.style.strokeDasharray = '';
+    sproutPath.style.strokeDashoffset = '';
+
+    // reset stem
+    stem.setAttribute('height', 0);
+    stem.setAttribute('y', 0);
+
+    // crown hide
+    crown.style.opacity = 0;
+    crown.classList.remove('crown-show');
+
+    // clear leaves (removing pop class)
+    leavesGroup.querySelectorAll('.leaf').forEach(l => {
+      l.classList.remove('leaf-pop');
+      l.style.opacity = 0;
+    });
+
+    // hide apple & bud
+    appleGroup.style.opacity = 0;
+    appleGroup.classList.remove('apple-grow');
+    bud.classList.remove('bud-pop');
+    bud.style.opacity = 0;
+
+    // hide impact shadow and ground seed
+    impactShadow.classList.remove('impact-pop');
+    document.getElementById('groundSeed').classList.remove('ground-seed-pop');
+
+    // show main seed again
+    seedLeft.style.opacity = 1;
+    seedRight.style.opacity = 1;
+  }
+
+  // Full sequence
+  async function runOneCycle() {
+    // 1) seed opens
+    await wait(TIMES.seedOpenDelay);
+    await openSeed();
+
+    // 2) small delay then sprout path draw + stem growth
+    await wait(TIMES.sproutDelay);
+    await drawSproutAndStem();
+
+    // 3) reveal crown + extend branches
+    await wait(TIMES.branchDelay);
+    crown.style.opacity = 1;
+    await showCrownAndBranches();
+
+    // 4) pop leaves
+    await wait(TIMES.leafStartDelay);
+    await popLeaves();
+
+    // 5) bud -> apple
+    await wait(TIMES.budDelay);
+    await growApple();
+
+    // 6) hold and then fall
+    await wait(TIMES.appleHold);
+    await appleFallAndMorph();
+
+    // 7) final pause
+    await wait(TIMES.finalPause);
+  }
+
+  async function runCycles() {
+    // create leaves once before starting
+    createLeaves(22);
+    await wait(250);
+
+    while (cycles < MAX_CYCLES) {
+      await runOneCycle();
+      cycles++;
+      if (cycles < MAX_CYCLES) {
+        // prepare for next cycle: reset visible parts, but keep main trunk/stem visible
+        resetForNextCycle();
+        // small gap
         await wait(700);
       } else {
-        // final state: keep grown tree visible; hide the main seed and apple
-        seed.style.visibility = 'hidden';
-        apple.style.display = 'none';
+        // keep final tree visible but hide main seed and apple
+        document.getElementById('seedLeft').style.opacity = 0;
+        document.getElementById('seedRight').style.opacity = 0;
+        appleGroup.style.display = 'none';
       }
     }
   }
 
-  // wait for DOM and sizes, then start
-  function startWhenReady(){
-    // ensure crown layout measured
-    createLeaves();
-    // slight delay to let CSS settle
-    setTimeout(()=> {
-      runCycles().catch(e=>console.error(e));
-    }, 420);
-  }
-
-  window.addEventListener('load', startWhenReady);
-  window.addEventListener('resize', ()=>{
-    // rebuild leaf positions to adapt to size
-    leaves.length = 0;
-    createLeaves();
+  // Start
+  window.addEventListener('load', () => {
+    // ensure sizes ready then start
+    setTimeout(() => {
+      runCycles().catch(e => console.error(e));
+    }, 350);
   });
 
-  // debug helper (optional)
-  window._restartTree = () => {
-    cycle = 0;
+  // expose restart for debug
+  window._restartTree = function() {
+    cycles = 0;
+    resetForNextCycle();
     runCycles();
   };
 
