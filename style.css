@@ -1,103 +1,63 @@
-:root{
-  --sky-top:#e9fbff;
-  --sky-bottom:#bfe9ff;
-  --ground:#7a4b2a;
-  --trunk:#6b3f23;
-  --leaf:#37a84a;
-  --leaf-dark:#2f8a3f;
-  --apple:#d73d34;
-  --seed-brown:#8b5a3c;
-}
 
-/* page */
+/* layout */
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial}
-body{
-  display:flex;justify-content:center;align-items:flex-end;
-  background: linear-gradient(to top,var(--sky-bottom),var(--sky-top));
-  overflow:hidden;
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:linear-gradient(#e6f9ff,#cfefff)}
+.wrap{display:flex;justify-content:center;align-items:flex-end;min-height:100vh;padding-bottom:18px}
+.stage{width:1000px;max-width:96vw}
+
+/* svg responsive */
+#scene{width:100%;height:auto;display:block}
+
+/* seed open animation helpers (JS toggles classes) */
+.seed-open-left { transform-origin: 500px 520px; /* center-based via JS */ animation: seedOpenLeft 700ms ease-out forwards; }
+.seed-open-right { transform-origin: 500px 520px; animation: seedOpenRight 700ms ease-out forwards; }
+
+@keyframes seedOpenLeft {
+  to { transform: translate(-18px,-10px) rotate(-48deg); opacity:1; }
+}
+@keyframes seedOpenRight {
+  to { transform: translate(18px,-10px) rotate(48deg); opacity:1; }
 }
 
-/* stage */
-.scene{width:980px;max-width:98vw;height:820px;position:relative;pointer-events:none}
-.stage{position:relative;width:100%;height:100%;margin:0 auto}
+/* sprout path draw via dashoffset animation (JS sets dasharray/dashoffset) */
 
-/* ground */
-.ground{position:absolute;left:0;right:0;bottom:0;height:160px;background:linear-gradient(180deg,#8b5b3b,var(--ground));border-top-left-radius:22px;border-top-right-radius:22px;box-shadow:inset 0 8px 20px rgba(0,0,0,0.15);z-index:1}
+/* stem grow (JS will set height) */
 
-/* info */
-.info{position:absolute;left:12px;top:12px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;font-size:13px;color:#123;box-shadow:0 6px 18px rgba(0,0,0,0.06);z-index:60}
+/* crown reveal and branch extend */
+.crown-show { animation: crownShow 700ms ease-out forwards; }
+@keyframes crownShow { from { opacity:0; transform:translateY(10px);} to { opacity:1; transform:translateY(0);} }
 
-/* central planting area */
-.seed, .sprout, .crown, .impact, .ground-seed { position:absolute; left:50%; transform:translateX(-50%); }
-
-/* SEED */
-.seed{bottom:92px;width:42px;height:26px;z-index:40}
-.seed .half{position:absolute;width:21px;height:26px;background:linear-gradient(180deg,var(--seed-brown),#6b3f23);border-radius:6px;box-shadow:0 4px 8px rgba(0,0,0,0.25)}
-.seed .left{left:0;transform-origin:right center}
-.seed .right{right:0;transform-origin:left center}
-.seed.open .left{animation:seedOpenLeft 700ms forwards ease-out}
-.seed.open .right{animation:seedOpenRight 700ms forwards ease-out}
-@keyframes seedOpenLeft{0%{transform:rotate(0)}100%{transform:rotate(-48deg) translate(-8px,-6px)}}
-@keyframes seedOpenRight{0%{transform:rotate(0)}100%{transform:rotate(48deg) translate(8px,-6px)}}
-
-/* SPROUT & STEM */
-.sprout{bottom:96px;width:18px;height:0;z-index:30}
-.stem{width:18px;height:320px;background:linear-gradient(180deg,#8f6040,var(--trunk));border-radius:10px;transform-origin:bottom center;transform:scaleY(0);box-shadow:0 6px 12px rgba(0,0,0,0.12)}
-.stem.grow{animation:stemGrow 1400ms forwards cubic-bezier(.2,.9,.2,1)}
-@keyframes stemGrow{0%{transform:scaleY(0)}85%{transform:scaleY(1.06)}100%{transform:scaleY(1)}}
-
-/* CROWN and BRANCHES */
-.crown{bottom:260px;width:520px;height:260px;z-index:28;pointer-events:none}
-.branch{position:absolute;bottom:36px;height:18px;border-radius:12px;background:linear-gradient(90deg,#8f6040,#6b3f23);box-shadow:0 4px 10px rgba(0,0,0,0.12);opacity:0;transform-origin:left center}
-.branch.arm.left{left:120px;width:220px;transform:rotate(-28deg) translateX(-24px) scaleX(0)}
-.branch.arm.right{right:120px;width:220px;transform:rotate(28deg) translateX(24px) scaleX(0);transform-origin:right center}
-.branch.extend-left{animation:armLeftExtend 700ms forwards cubic-bezier(.2,.9,.2,1);opacity:1}
-.branch.extend-right{animation:armRightExtend 700ms forwards cubic-bezier(.2,.9,.2,1);opacity:1}
-@keyframes armLeftExtend{0%{transform:rotate(-28deg) translateX(-24px) scaleX(0);opacity:0}100%{transform:rotate(-18deg) translateX(0) scaleX(1);opacity:1}}
-@keyframes armRightExtend{0%{transform:rotate(28deg) translateX(24px) scaleX(0);opacity:0}100%{transform:rotate(18deg) translateX(0) scaleX(1);opacity:1}}
-
-/* LEAVES (oval style) - many leaves will be created by JS and get class leaf */
-.leaf {
-  position:absolute;
-  width:56px;height:34px;
-  background: radial-gradient(circle at 40% 30%, var(--leaf), var(--leaf-dark) 70%);
-  border-radius:40px 20px 40px 20px;
-  transform-origin:center center;
-  opacity:0;
-  transform: scale(0.12) rotate(-6deg);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.12);
-  z-index:29;
-}
 /* leaf pop */
-.leaf.pop{animation:leafPop 620ms forwards cubic-bezier(.2,.9,.2,1)}
-@keyframes leafPop{0%{transform:scale(0.12) rotate(-8deg);opacity:0}60%{transform:scale(1.06) rotate(2deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}
+.leaf-pop { animation: leafPop 520ms cubic-bezier(.2,.9,.2,1) forwards; }
+@keyframes leafPop {
+  0% { transform: scale(0.12) rotate(var(--rot)); opacity:0; }
+  70% { transform: scale(1.06) rotate(calc(var(--rot) + 2deg)); opacity:1; }
+  100% { transform: scale(1) rotate(var(--rot)); opacity:1; }
+}
 
-/* BUD and APPLE */
-.bud{position:absolute;width:12px;height:8px;background:#ffdede;border-radius:8px;left:50%;transform:translateX(-50%) scale(0);bottom:110px;z-index:31}
-.bud.pop{animation:budPop 700ms forwards ease-out}
-@keyframes budPop{0%{transform:translateX(-50%) scale(0);opacity:0}100%{transform:translateX(-50%) scale(1);opacity:1}}
+/* bud and apple grow */
+.bud-pop { animation: budPop 600ms ease-out forwards; }
+@keyframes budPop { from { transform: scale(0); opacity:0 } to { transform: scale(1); opacity:1 } }
 
-.apple{position:absolute;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 34% 28%, #ff9494, var(--apple) 60%);left:50%;transform:translateX(-50%) scale(0);bottom:94px;z-index:33;box-shadow:0 12px 18px rgba(0,0,0,0.18)}
-.apple.grow{animation:appleGrow 700ms forwards cubic-bezier(.2,.9,.2,1);opacity:1}
-@keyframes appleGrow{0%{transform:translateX(-50%) scale(0.02);opacity:0}80%{transform:translateX(-50%) scale(1.08);opacity:1}100%{transform:translateX(-50%) scale(1);opacity:1}}
+.apple-grow { animation: appleGrow 700ms cubic-bezier(.2,.9,.2,1) forwards; }
+@keyframes appleGrow { 0%{ transform: scale(0.02); opacity:0 } 80%{ transform: scale(1.08); opacity:1 } 100%{ transform: scale(1); opacity:1 } }
 
-/* apple fall—JS toggles .fall */
-.apple.fall{animation:appleFall 1200ms forwards cubic-bezier(.22,.7,.25,1)}
-@keyframes appleFall{0%{transform:translateX(-50%) translateY(0) scale(1);}60%{transform:translateX(-50%) translateY(190px) scale(1);}78%{transform:translateX(-50%) translateY(160px) scale(0.92);}100%{transform:translateX(-50%) translateY(190px) scale(0.0);opacity:0;}}
+/* apple fall handled via JS by animating translateY and rotate; final transform will hide it */
 
-/* IMPACT shadow */
-.impact{position:absolute;bottom:116px;width:120px;height:26px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,0.28),rgba(0,0,0,0.05));opacity:0;z-index:10;transform:translateX(-50%) scale(0.6)}
-.impact.pop{animation:impactPop 520ms forwards ease}
-@keyframes impactPop{0%{opacity:0;transform:translateX(-50%) scale(0.5)}60%{opacity:0.86;transform:translateX(-50%) scale(1.05)}100%{opacity:0.6;transform:translateX(-50%) scale(0.95)}}
+/* impact shadow pop */
+.impact-pop { animation: impactPop 520ms ease-out forwards; }
+@keyframes impactPop {
+  0% { transform: scale(0.6); opacity:0; }
+  60% { transform: scale(1.05); opacity:0.86; }
+  100% { transform: scale(0.9); opacity:0.6; }
+}
 
-/* tiny ground seed after apple falls */
-.ground-seed{position:absolute;bottom:98px;z-index:35;left:50%;transform:translateX(-50%)}
-.ground-seed .tiny{display:block;width:16px;height:12px;background:linear-gradient(180deg,var(--seed-brown),#6b3f23);border-radius:8px;transform:scale(0);opacity:0;margin-left:-8px}
-.ground-seed.show .tiny{animation:tinyPop 420ms forwards ease-out}
-@keyframes tinyPop{0%{transform:scale(0);opacity:0}70%{transform:scale(1.18);opacity:1}100%{transform:scale(1);opacity:1}}
+/* tiny ground seed pop */
+.ground-seed-pop { animation: tinyPop 420ms ease-out forwards; }
+@keyframes tinyPop { 0%{ transform: scale(0); opacity:0 } 70%{ transform: scale(1.18); opacity:1 } 100%{ transform: scale(1); opacity:1 } }
 
-/* responsive */
-@media (max-width:900px){ .scene{transform:scale(0.85)} }
-@media (max-width:620px){ .scene{transform:scale(0.72)} }
+/* small responsive tweak */
+@media (max-width:720px){
+  .stage{transform:scale(0.82)}
+}
 
