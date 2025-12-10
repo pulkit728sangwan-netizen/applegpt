@@ -3,45 +3,90 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Real Tree Growth — Seed to Apple (2 cycles)</title>
+  <title>Seed → Sprout → Tree → Apple (SVG)</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="scene" aria-label="Tree growth animation">
-    <div class="stage">
-      <!-- seed (reused) -->
-      <div id="seed" class="seed" aria-hidden="false">
-        <div class="half left"></div>
-        <div class="half right"></div>
-      </div>
+  <main class="wrap">
+    <section class="stage">
+      <!-- SVG scene -->
+      <svg id="scene" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet">
+        <!-- sky background -->
+        <rect x="0" y="0" width="1000" height="700" fill="url(#skyGrad)"/>
+        <defs>
+          <linearGradient id="skyGrad" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#e6f9ff"/>
+            <stop offset="1" stop-color="#bfe9ff"/>
+          </linearGradient>
+          <radialGradient id="appleGloss" cx="30%" cy="25%" r="60%">
+            <stop offset="0" stop-color="#fff7f7"/>
+            <stop offset="0.35" stop-color="#ff9b9b"/>
+            <stop offset="1" stop-color="#d73d34"/>
+          </radialGradient>
+          <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="6" stdDeviation="10" flood-opacity="0.25"/>
+          </filter>
+        </defs>
 
-      <!-- sprout + stem container -->
-      <div id="sprout" class="sprout">
-        <div id="stem" class="stem"></div>
-      </div>
+        <!-- ground -->
+        <rect x="0" y="560" width="1000" height="140" rx="22" fill="#8B5B3B" />
 
-      <!-- branch crown (JS will place many leaves here) -->
-      <div id="crown" class="crown" aria-hidden="true">
-        <div id="leftBranch" class="branch arm left"></div>
-        <div id="rightBranch" class="branch arm right"></div>
-        <!-- bud and apple -->
-        <div id="bud" class="bud"></div>
-        <div id="apple" class="apple" aria-hidden="true"></div>
-      </div>
+        <!-- seed (two halves) placed at center above ground -->
+        <g id="seedGroup" transform="translate(500,520)">
+          <ellipse id="seedLeft" cx="-12" cy="0" rx="22" ry="14" fill="#7a4f36" />
+          <ellipse id="seedRight" cx="12" cy="0" rx="22" ry="14" fill="#7a4f36" />
+        </g>
 
-      <!-- impact shadow / ground seed -->
-      <div id="impact" class="impact"></div>
-      <div id="groundSeed" class="ground-seed"><span class="tiny"></span></div>
+        <!-- sprout path (invisible initially) -->
+        <path id="sproutPath" d="M500,515 C500,480 504,460 505,420" fill="none" stroke="#2f6b3a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0 1000"/>
 
-      <!-- ground for visual -->
-      <div class="ground"></div>
-    </div>
+        <!-- stem as a rectangle which scales vertically -->
+        <g id="plantGroup" transform="translate(500,420)">
+          <rect id="stem" x="-18" y="0" width="36" height="0" rx="10" fill="url(#stemGrad)"/>
+        </g>
 
-    <div class="info">Seed → Sprout → Stem → Branches → Leaves → Apple → Fall → Seed (2 cycles)</div>
+        <defs>
+          <linearGradient id="stemGrad" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#8a5b38"/>
+            <stop offset="1" stop-color="#5a371f"/>
+          </linearGradient>
+        </defs>
+
+        <!-- crown group: branches, leaves, bud, apple -->
+        <g id="crown" transform="translate(500,220)" opacity="0">
+          <!-- left branch -->
+          <g id="leftBranch" transform="translate(-40,40) rotate(-28)">
+            <rect x="0" y="-8" width="220" height="16" rx="8" fill="#7a4f36"/>
+          </g>
+          <!-- right branch -->
+          <g id="rightBranch" transform="translate(40,40) rotate(28)">
+            <rect x="-220" y="-8" width="220" height="16" rx="8" fill="#7a4f36"/>
+          </g>
+
+          <!-- leaves container; JS will add many leaves here -->
+          <g id="leavesGroup"></g>
+
+          <!-- bud (where apple will grow) -->
+          <circle id="bud" cx="0" cy="-10" r="6" fill="#ffdede" opacity="0"/>
+
+          <!-- apple (hidden until it grows) -->
+          <g id="appleGroup" transform="translate(0,-8)" opacity="0" filter="url(#softShadow)">
+            <circle id="appleBody" cx="0" cy="0" r="20" fill="url(#appleGloss)"/>
+            <path d="M -4 -20 Q 0 -28 6 -22" fill="#3b5a2b" stroke="#2c3e1f" stroke-width="1.2" />
+            <ellipse cx="8" cy="-6" rx="6" ry="3" fill="#2f8a3f" transform="rotate(-30)"/>
+          </g>
+        </g>
+
+        <!-- impact shadow where apple will hit -->
+        <ellipse id="impactShadow" cx="500" cy="598" rx="80" ry="20" fill="rgba(0,0,0,0.18)" opacity="0"/>
+
+      </svg>
+    </section>
   </main>
 
   <script src="script.js"></script>
 </body>
 </html>
+
 
  
